@@ -461,11 +461,7 @@ body{
   z-index: 1000001;
 
   pointer-events:none;
-  background: radial-gradient(circle at center,
-    rgba(0,0,0,0.15) 0%,
-    rgba(0,0,0,0.60) 60%,
-    rgba(0,0,0,0.85) 100%
-  );
+  
 
   opacity:0;
   transition:opacity .12s ease;
@@ -565,6 +561,7 @@ body{
   }
   .envelope{ width:260px; height:170px; }
 }
+
 
 
 
