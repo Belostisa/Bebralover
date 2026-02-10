@@ -46,44 +46,43 @@
       <div class="envelope-flap"></div>
     </div>
   </section>
-  
+
   <!-- PASSWORD WINDOW -->
-<div class="pass-overlay" id="passOverlay">
-  <div class="pass-window" id="passWindow">
-    <div class="email-header">
-  <span class="email-title">
-    <span class="lock-icon" id="lockIcon" aria-hidden="true">🔒</span>
-    Locked
-  </span>
-  <button class="email-close" onclick="closePass()">✕</button>
-</div>
+  <div class="pass-overlay" id="passOverlay">
+    <div class="pass-window" id="passWindow">
+      <div class="email-header">
+        <span class="email-title">
+          <span class="lock-icon" id="lockIcon" aria-hidden="true">🔒</span>
+          Locked
+        </span>
+        <button class="email-close" onclick="closePass()">✕</button>
+      </div>
 
-    <div class="pass-body">
-      <div class="pass-label">Enter password</div>
+      <div class="pass-body">
+        <div class="pass-label">Enter password</div>
 
-      <input
-        id="passInput"
-        class="pass-input"
-        type="password"
-        inputmode="numeric"
-        autocomplete="one-time-code"
-        placeholder="••••••"
-        maxlength="6"
-      />
+        <input
+          id="passInput"
+          class="pass-input"
+          type="password"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          placeholder="••••••"
+          maxlength="6"
+        />
 
-      <div class="pass-error" id="passError" aria-live="polite"></div>
-    </div>
+        <div class="pass-error" id="passError" aria-live="polite"></div>
+      </div>
 
-    <div class="email-footer">
-      <button onclick="submitPass()">Unlock</button>
-      <span id="passHint" style="justify-self:center; color:#9AFF7A; font-size:13px; letter-spacing:1px;">
-        Protected
-      </span>
-      <button onclick="closePass()">Cancel</button>
+      <div class="email-footer">
+        <button onclick="submitPass()">Unlock</button>
+        <span id="passHint" style="justify-self:center; color:#9AFF7A; font-size:13px; letter-spacing:1px;">
+          Protected
+        </span>
+        <button onclick="closePass()">Cancel</button>
+      </div>
     </div>
   </div>
-</div>
-
 
   <!-- EMAIL WINDOW -->
   <div class="email-overlay" id="emailOverlay">
@@ -103,15 +102,14 @@
     </div>
   </div>
 
+  <!-- FAIL IMAGE DISINTEGRATE -->
+  <div id="failGhost" class="fail-ghost" aria-hidden="true">
+    <canvas id="ghostCanvas"></canvas>
+  </div>
+
 <script>
 /* ============================================================
    PERFORMANCE PATCHES INCLUDED
-   ✅ Cap DPR for canvases (huge mobile win)
-   ✅ FX loop sleeps when no particles (no constant 60fps clears)
-   ✅ MAX_PARTICLES cap + click spam control (fixes lag on flower spam)
-   ✅ Smaller analyser FFT + fewer wave points
-   ✅ Stop waves + show play button when audio ends / pauses
-   ✅ Keeps typewriter + cache + autoscroll + envelope delay
 ============================================================ */
 
 /* =========================
@@ -174,7 +172,6 @@ let typingTimer = 0;
 let typingToken = 0;
 const typedCache = new Map();
 
-// cursor CSS once
 (function addCursorCSS(){
   if (document.getElementById("twCursorCSS")) return;
   const s = document.createElement("style");
@@ -280,11 +277,11 @@ function typewriterPage(pageIndex){
 
 function renderPage(){ typewriterPage(currentPage); }
 
+/* =========================
+   PASSWORD
+========================= */
 const PASSCODE = "081225";
-
-inboxUnlocked = sessionStorage.getItem("inboxUnlocked") === "1";
-
-// ✅ wrong-try counter (resets after success, and can reset when opening window too)
+let inboxUnlocked = sessionStorage.getItem("inboxUnlocked") === "1";
 let passFails = 0;
 
 const failMessages = [
@@ -293,6 +290,139 @@ const failMessages = [
   "Привет, ромашки..."
 ];
 
+/* =========================
+   FAIL IMAGE DISINTEGRATE
+========================= */
+const GHOST_IMG_SRC = "media/baby.png"; // <-- set your real path
+
+function showGhostDisintegrate(){
+  const wrap = document.getElementById("failGhost");
+  const canvas = document.getElementById("ghostCanvas");
+  if (!wrap || !canvas) return;
+
+  wrap.classList.add("show");
+
+  const cssSize = Math.min(window.innerWidth * 0.80, 520);
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+  canvas.style.width = cssSize + "px";
+  canvas.style.height = cssSize + "px";
+  canvas.width = Math.floor(cssSize * dpr);
+  canvas.height = Math.floor(cssSize * dpr);
+
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssSize, cssSize);
+
+  // Build an absolute URL so relative path mistakes are easier to see in Network tab
+  const url = new URL(GHOST_IMG_SRC, window.location.href).href;
+
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+
+  img.onerror = () => {
+    // Visible fallback = confirms overlay is working, but image path is broken
+    ctx.clearRect(0, 0, cssSize, cssSize);
+    ctx.fillStyle = "rgba(255,0,0,0.15)";
+    ctx.fillRect(0, 0, cssSize, cssSize);
+    ctx.strokeStyle = "rgba(255,90,90,0.9)";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(8, 8, cssSize - 16, cssSize - 16);
+    ctx.fillStyle = "rgba(255,120,120,0.95)";
+    ctx.font = "14px Courier New, monospace";
+    ctx.fillText("IMAGE FAILED TO LOAD", 18, 34);
+    ctx.font = "12px Courier New, monospace";
+    ctx.fillText(GHOST_IMG_SRC, 18, 54);
+    // keep it shown a moment so you can see the error
+    setTimeout(() => wrap.classList.remove("show"), 1200);
+  };
+
+  img.onload = async () => {
+    // decode() avoids “loaded but not ready” on some browsers
+    if (img.decode) {
+      try { await img.decode(); } catch (e) {}
+    }
+
+    // Draw centered, cover
+    const scale = Math.max(cssSize / img.width, cssSize / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    const dx = (cssSize - dw) / 2;
+    const dy = (cssSize - dh) / 2;
+
+    ctx.clearRect(0, 0, cssSize, cssSize);
+    ctx.drawImage(img, dx, dy, dw, dh);
+
+    setTimeout(() => disintegrateCanvas(canvas, wrap, cssSize), 220);
+  };
+
+  img.src = url;
+}
+
+function disintegrateCanvas(canvas, wrap, cssSize){
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+  const w = Math.floor(cssSize);
+  const h = Math.floor(cssSize);
+
+  const imgData = ctx.getImageData(0, 0, w, h);
+  const data = imgData.data;
+
+  const parts = [];
+  const step = 4;
+
+  for (let y = 0; y < h; y += step){
+    for (let x = 0; x < w; x += step){
+      const i = (y * w + x) * 4;
+      const a = data[i + 3];
+      if (a < 40) continue;
+      parts.push({
+        x, y,
+        vx: (Math.random() - 0.5) * 5.2,
+        vy: (Math.random() - 0.5) * 5.2 - 1.4,
+        life: 1,
+        decay: 0.012 + Math.random() * 0.02,
+        r: data[i], g: data[i+1], b: data[i+2],
+        a: a / 255
+      });
+    }
+  }
+
+  ctx.clearRect(0, 0, w, h);
+
+  let frame = 0;
+  function tick(){
+    frame++;
+    ctx.clearRect(0, 0, w, h);
+
+    for (let p of parts){
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.life -= p.decay;
+
+      if (p.life <= 0) continue;
+
+      const alpha = Math.max(0, p.life) * p.a;
+      ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha})`;
+      const s = 1.2 + (p.life * 0.8);
+      ctx.fillRect(p.x, p.y, s, s);
+    }
+
+    if (frame < 140){
+      requestAnimationFrame(tick);
+    } else {
+      wrap.classList.remove("show");
+      ctx.clearRect(0, 0, w, h);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}
+
+/* =========================
+   EMAIL OPEN / PASS OPEN
+========================= */
 function openEmail(){
   const env = document.querySelector(".envelope");
   env.classList.add("open");
@@ -304,8 +434,7 @@ function openEmail(){
   setTimeout(() => {
     openEmail._pending = false;
 
-    // ✅ if already unlocked, skip password screen
-    let inboxUnlocked = sessionStorage.getItem("inboxUnlocked") === "1";
+    inboxUnlocked = sessionStorage.getItem("inboxUnlocked") === "1";
     if (inboxUnlocked) {
       document.getElementById("emailOverlay").style.display = "flex";
       renderPage();
@@ -315,7 +444,6 @@ function openEmail(){
   }, DURATION_MS + 60);
 }
 
-
 function openPass(){
   const passOverlay = document.getElementById("passOverlay");
   const input = document.getElementById("passInput");
@@ -323,51 +451,45 @@ function openPass(){
 
   err.textContent = "";
   input.value = "";
-
   passOverlay.style.display = "flex";
 
-  // focus after paint (mobile friendly)
-  requestAnimationFrame(() => {
-    input.focus();
-  });
+  requestAnimationFrame(() => input.focus());
 }
 
 function closePass(){
   document.getElementById("passOverlay").style.display = "none";
-
-  // if they cancel, close envelope too (optional but feels right)
   document.querySelector(".envelope").classList.remove("open");
 }
 
 function submitPass(){
   const input = document.getElementById("passInput");
   const err = document.getElementById("passError");
-
   const val = (input.value || "").trim();
 
- if (val !== PASSCODE){
-  passFails++;
+  if (val !== PASSCODE){
+    passFails++;
 
-  err.textContent = passFails <= 3
-    ? failMessages[passFails - 1]
-    : "Wrong password";
+    err.textContent = passFails <= 3
+      ? failMessages[passFails - 1]
+      : "Wrong password";
 
-  if (passFails >= 1){
     triggerGlitch();
+
+    if (passFails === 3){
+      showGhostDisintegrate();
+    }
+
+    input.focus();
+    input.select?.();
+    return;
   }
 
-  input.focus();
-  input.select?.();
-  return;
-}
+  unlockSuccessAnim();
 
- unlockSuccessAnim();
-
-  // ✅ correct
   inboxUnlocked = true;
   sessionStorage.setItem("inboxUnlocked", "1");
 
-  passFails = 0;            // reset counter on success
+  passFails = 0;
   err.textContent = "";
   input.value = "";
 
@@ -381,8 +503,8 @@ function triggerGlitch(){
   const err = document.getElementById("passError");
   if (!win) return;
 
-  win.classList.remove("glitch"); // restart
-  void win.offsetWidth;           // force reflow
+  win.classList.remove("glitch");
+  void win.offsetWidth;
   win.classList.add("glitch");
 
   if (err){
@@ -397,17 +519,13 @@ function unlockSuccessAnim(){
   const icon = document.getElementById("lockIcon");
   if (!icon) return;
 
-  // restart animation
   icon.classList.remove("unlock-ok");
   void icon.offsetWidth;
   icon.classList.add("unlock-ok");
-
-  // swap icon to “unlocked” briefly
   icon.textContent = "🔓";
 }
 
-
-// Enter key submits
+/* Enter key submits */
 document.addEventListener("keydown", (e) => {
   const passOverlay = document.getElementById("passOverlay");
   if (!passOverlay || passOverlay.style.display !== "flex") return;
@@ -428,6 +546,11 @@ function nextPage(){
 function prevPage(){
   if (currentPage > 0){ currentPage--; renderPage(); }
 }
+
+/* =========================
+   WAVES + PARTICLES (UNCHANGED)
+   ... keep the rest of your original waves + particles code here ...
+========================= */
 
 /* =========================
    WAVES + PARTICLES
@@ -459,17 +582,11 @@ function waveThickness(){
   return window.matchMedia("(max-width: 600px)").matches ? 1.0 : 1.25;
 }
 
-/* =========================
-   DPR CAP (BIG PERF WIN)
-========================= */
 function getDPR(){
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
   return Math.min(isMobile ? 1.2 : 1.5, window.devicePixelRatio || 1);
 }
 
-/* =========================
-   FULLSCREEN FX CANVAS
-========================= */
 const fxCanvas = document.createElement("canvas");
 fxCanvas.id = "fxCanvas";
 Object.assign(fxCanvas.style, {
@@ -503,9 +620,6 @@ function resizeWaveCanvas(){
   waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-/* =========================
-   Place waves BETWEEN flowers + envelope
-========================= */
 function updateWavePosition(){
   if (!flowersSection || !envelopeEl) return;
 
@@ -550,9 +664,6 @@ scheduleLayoutUpdate();
 setTimeout(scheduleLayoutUpdate, 150);
 setTimeout(scheduleLayoutUpdate, 650);
 
-/* =========================
-   Audio analyser (lighter)
-========================= */
 function setupAnalyser(){
   if (audioCtx) return;
 
@@ -593,11 +704,8 @@ function readAudio(){
   return { level: rmsSmooth, treble: trebleSmooth };
 }
 
-/* =========================
-   Particles (FX loop sleeps + spam protection)
-========================= */
 const particles = [];
-const MAX_PARTICLES = 220; // ✅ hard cap (try 160–260)
+const MAX_PARTICLES = 220;
 
 function rand(a, b){ return a + Math.random() * (b - a); }
 
@@ -621,7 +729,7 @@ function clampParticles(){
 
 function spawnFlowerOrbs(vx, vy){
   const isMobile = window.matchMedia("(max-width: 600px)").matches;
-  const count = isMobile ? 8 : 14; // ✅ fewer on mobile
+  const count = isMobile ? 8 : 14;
 
   for (let i = 0; i < count; i++){
     const angle = rand(-Math.PI * 0.80, -Math.PI * 0.20);
@@ -683,7 +791,6 @@ function drawParticles(){
       p.x += Math.sin(t * p.w + p.ph) * 0.26;
     }
 
-    // ✅ slightly shorter lifetime reduces “pile-up”
     p.life -= (p.type === "orb" ? 0.012 : 0.016);
 
     if (p.life <= 0){
@@ -726,10 +833,6 @@ function drawParticles(){
   }
 }
 
-/* =========================
-   FLOWER CLICK -> ORBS
-   ✅ dynamic cooldown when lots of particles exist
-========================= */
 let lastFlower = 0;
 
 function pointInShrunkRect(x, y, r, shrinkX = 0.18, shrinkTop = 0.10, shrinkBottom = 0.22){
@@ -749,7 +852,6 @@ document.addEventListener("click", (e) => {
   if (!inside) return;
 
   const now = Date.now();
-
   const extraDelay = particles.length > 140 ? 220 : 0;
   const minGap = 140 + extraDelay;
 
@@ -759,9 +861,6 @@ document.addEventListener("click", (e) => {
   spawnFlowerOrbs(e.clientX, e.clientY);
 }, { passive: true });
 
-/* =========================
-   Play button show/hide logic
-========================= */
 function showPlayButton(){ playBtn.classList.remove("hidden"); }
 function hidePlayButton(){ playBtn.classList.add("hidden"); }
 
@@ -774,19 +873,9 @@ function stopWaves(){
   waveCtx.clearRect(0, 0, w, h);
 }
 
-audioEl.addEventListener("ended", () => {
-  stopWaves();
-  showPlayButton();
-});
+audioEl.addEventListener("ended", () => { stopWaves(); showPlayButton(); });
+audioEl.addEventListener("pause", () => { stopWaves(); showPlayButton(); });
 
-audioEl.addEventListener("pause", () => {
-  stopWaves();
-  showPlayButton();
-});
-
-/* =========================
-   Play button dissolve (particles a bit higher)
-========================= */
 function dissolvePlayButton(){
   const r = playBtn.getBoundingClientRect();
   const cx = r.left + r.width / 2;
@@ -795,9 +884,6 @@ function dissolvePlayButton(){
   hidePlayButton();
 }
 
-/* =========================
-   Waves drawing
-========================= */
 function strokeNeonBlue(drawPath, thickness = 1, glow = 1){
   waveCtx.save();
   waveCtx.globalCompositeOperation = "lighter";
@@ -939,9 +1025,6 @@ function startLoop(){
   rafId = requestAnimationFrame(loop);
 }
 
-/* =========================
-   Play click (starts waves + audio)
-========================= */
 playBtn.addEventListener("click", async (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -963,9 +1046,6 @@ playBtn.addEventListener("click", async (e) => {
   startLoop();
 });
 
-/* =========================
-   Pause heavy work when tab hidden
-========================= */
 document.addEventListener("visibilitychange", () => {
   if (document.hidden){
     stopWaves();
@@ -987,6 +1067,7 @@ document.addEventListener("visibilitychange", () => {
 
 </body>
 </html>
+
 
 
 
