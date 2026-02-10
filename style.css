@@ -329,7 +329,7 @@ body{
   min-height: 18px;
   font-size: 13px;
   letter-spacing: 0.5px;
-  color: #B6FF9A;
+  color: #ff6969;
   opacity: 0.95;
 }
 
@@ -531,6 +531,7 @@ body{
   }
   .envelope{ width:260px; height:170px; }
 }
+
 
 
 
