@@ -44,12 +44,23 @@ body{
   align-items:center;
   pointer-events:none;
 }
-.flowers-video{
+.flowers-webp{
   width:min(70vw, 900px);
   display:block;
   mix-blend-mode:screen;
   opacity:0.9;
   filter:saturate(2.5) contrast(1.10) brightness(1.08);
+}
+.flowers-section,
+.flowers-webp {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* =========================
@@ -555,7 +566,7 @@ background: radial-gradient(circle at center,
   .wave-play{ transform: translate(-50%, calc(-50% + 5px)); }
 
   .flowers-section{ height:62vh; }
-  .flowers-video{ width:140vw; max-width:none; }
+  .flowers-webp{ width:140vw; max-width:none; }
 
   .envelope-section{
     height:28vh;
@@ -565,6 +576,9 @@ background: radial-gradient(circle at center,
   }
   .envelope{ width:260px; height:170px; }
 }
+
+
+
 
 
 
