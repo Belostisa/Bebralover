@@ -25,13 +25,10 @@
 
   <!-- FLOWERS -->
   <section class="flowers-section">
-  <img 
-    src="media/flowers.webp" 
-    alt="Flowers"
-    class="flowers-webp"
-    draggable="false"
-  />
-</section>
+    <video autoplay muted loop playsinline class="flowers-video">
+      <source src="media/flowers2.mp4" type="video/mp4">
+    </video>
+  </section>
 
   <!-- WAVE OVERLAY -->
   <div class="wave-overlay" id="waveOverlay" aria-hidden="true">
@@ -530,7 +527,7 @@ const waveCanvas  = document.getElementById("waveCanvas");
 const waveCtx     = waveCanvas.getContext("2d", { alpha: true });
 
 const flowersSection = document.querySelector(".flowers-section");
-const flowersVideo = document.querySelector(".flowers-webp");
+const flowersVideo   = document.querySelector(".flowers-video");
 const envelopeEl     = document.querySelector(".envelope");
 
 let audioCtx = null;
@@ -811,10 +808,6 @@ function pointInShrunkRect(x, y, r, shrinkX = 0.18, shrinkTop = 0.10, shrinkBott
   return (x >= left && x <= right && y >= top && y <= bottom);
 }
 
-document.querySelector(".flowers-webp").addEventListener("dblclick", e => {
-  e.preventDefault();
-});
-
 document.addEventListener("click", (e) => {
   if (!flowersVideo) return;
   if (e.target.closest(".envelope") || e.target.closest(".email-overlay")) return;
@@ -1039,6 +1032,8 @@ document.addEventListener("visibilitychange", () => {
 
 </body>
 </html>
+
+
 
 
 
