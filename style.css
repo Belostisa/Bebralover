@@ -34,6 +34,29 @@ body{
   opacity:0.9;
 }
 
+/* Hide iOS Safari native play overlay; no controls chrome on muted inline videos */
+.bg-video video,
+.flowers-video{
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+}
+.flowers-video::-webkit-media-controls,
+.flowers-video::-webkit-media-controls-enclosure,
+.flowers-video::-webkit-media-controls-panel,
+.flowers-video::-webkit-media-controls-start-playback-button,
+.flowers-video::-webkit-media-controls-overlay-play-button,
+.bg-video video::-webkit-media-controls-start-playback-button,
+.bg-video video::-webkit-media-controls-overlay-play-button{
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  -webkit-appearance: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  visibility: hidden !important;
+}
+
 /* =========================
    FLOWERS
 ========================= */
@@ -44,8 +67,24 @@ body{
   align-items:center;
   pointer-events:none;
 }
-.flowers-video{
+.flowers-video-wrap{
+  position:relative;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   width:min(70vw, 900px);
+}
+.flowers-video-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:transparent;
+}
+.flowers-video{
+  width:100%;
+  max-width:min(70vw, 900px);
   display:block;
   mix-blend-mode:screen;
   opacity:0.9;
@@ -477,7 +516,7 @@ body{
   to{ transform:scale(1); }
 }
 
-background: radial-gradient(circle at center,
+background:radial-gradient(circle at center,
     rgba(0,0,0,0.15) 0%,
     rgba(0,0,0,0.60) 60%,
     rgba(0,0,0,0.85) 100%
@@ -565,6 +604,7 @@ background: radial-gradient(circle at center,
   }
   .envelope{ width:260px; height:170px; }
 }
+
 
 
 
